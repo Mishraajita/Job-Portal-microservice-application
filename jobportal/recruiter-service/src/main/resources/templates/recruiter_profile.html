@@ -75,6 +75,7 @@
 									<div class="col">
 										<input type="file" name="image" class="form-control" accept="image/png, image/jpeg"
 											th:required="${#strings.isEmpty(profile.profilePhoto)}" />
+										<small class="text-muted">Accepted formats: JPEG, PNG</small>	
 										<input type="text" name="profilePhoto" th:field="*{profilePhoto}" class="form-control" hidden />
 										<!-- when editing profile, image name is populated -->
 										<small th:if="${!#strings.isEmpty(profile.profilePhoto)}" class="text-muted">Current: <span

@@ -26,7 +26,7 @@
 </head>
 
 <body>
-<div class="row" style="margin-right:0; ">
+<div class="row" style="margin-right:0; " sec:authorize="hasAuthority('Job Seeker')">
     <div class="col-5 coffee_mug_background">
         <div class="logo_left mt-3 pt-4 ms-5 pl-5">
             <h2 class="logo" style="color: white">
@@ -223,6 +223,7 @@
                                         th:required="${#strings.isEmpty(profile.profilePhoto)}"
                                         accept="image/png, image/jpeg"
                                 />
+								<small class="text-muted">Accepted formats: JPEG, PNG</small>	
 								<!-- When editing a existing profile, users will see photo name -->
                                 <small th:if="${!#strings.isEmpty(profile.profilePhoto)}"
                                        class="text-muted">Current: <span th:text="${profile.profilePhoto}"></span></small>
@@ -240,9 +241,10 @@
                                         name="pdf"
                                         class="form-control"
                                         th:required="${#strings.isEmpty(profile.resume)}"
-                                        accept="application/pdf"
+                                        accept=".pdf,.docx"
                                 />
-								<!-- When editing a existing profile, users will see resume name -->
+								<small sec:authorize="hasAuthority('Job Seeker')" class="text-muted">Accepted formats: PDF, DOCX</small>
+								<!-- When editing a existing profile, users will see uploaded resume name -->
                                 <small sec:authorize="hasAuthority('Job Seeker')"
                                        th:if="${!#strings.isEmpty(profile.resume)}"
                                        class="text-muted">Current: <span th:text="${profile.resume}"></span></small>
@@ -251,9 +253,7 @@
                                    th:if="${!#strings.isEmpty(profile.resume)}"
                                    th:href="@{|/job-seeker-profile/downloadResume?fileName=${profile.resume}&&userID=${profile.userAccountId}|}">Download
                                     Resume</a>
-                                <a sec:authorize="hasAuthority('Recruiter')"
-                                   th:href="@{|/job-seeker-profile/downloadResume?fileName=${profile.resume}&&userID=${profile.userAccountId}|}">Download
-                                    Resume</a>
+									
                             </div>
                         </div>
 
@@ -277,76 +277,152 @@
     </div>
 </div>
 <div sec:authorize="hasAuthority('Recruiter')">
+	<div class="row" style="margin-right:0;">
+		<div class="col-5 coffee_mug_background">
+			<div class="logo_left mt-3 pt-4 ms-5 pl-5">
+				<h2 class="logo" style="color: white">
+					hotdevjobs <span class="logo_com">.com</span>
+				</h2>
+			</div>
+		</div>
+		<div class="col-7">
+			<div class="myForm">
+				<div class="row" style="margin-right:0; margin-left:0;">
+					<div class="col-md-12">
+						<div class="d-flex justify-content-center pt-3">
+							<h1 class="heading_font font-weight-bold">Applied Candidate's Profile</h1>
+						</div>
+					</div>
+					<div class="col-md-12 mt-3 px-4 pb-4">
+						<div class="text-center mb-4"
+							th:if="${profile.photosImagePath != null and !#strings.isEmpty(profile.photosImagePath)}">
+							<img th:src="@{${profile.photosImagePath}}" class="rounded-circle" height="100" width="100"
+								alt="Photo" />
+						</div>
 
+						<!-- Name -->
+						<div class="mb-3">
+							<div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">
+								Name</div>
+							<div class="fw-bold fs-5" th:text="${profile.firstName + ' ' + profile.lastName}"></div>
+						</div>
+
+						<!-- Location -->
+						<div class="mb-3">
+							<div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">
+								Location</div>
+							<div th:text="${profile.city + ', ' + profile.state + ', ' + profile.country}"></div>
+						</div>
+
+						<!-- Work Classification -->
+						<div class="mb-3">
+							<div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">
+								Work Classification</div>
+							<div>
+								<span class="fw-semibold" th:text="${profile.workAuthorization}"></span>
+								<span class="text-muted mx-2">|</span>
+								<span th:text="${profile.employmentType}"></span>
+							</div>
+						</div>
+
+						<!-- Skills -->
+						<div class="mb-3">
+							<div class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing:.05em;">
+								Skills</div>
+							<div th:each="skill : ${profile.skills}" class="mb-1">
+								<span class="fw-semibold" th:text="${skill.name}"></span>
+								<span class="text-muted">
+									&mdash; <span th:text="${skill.yearsOfExperience}"></span> yr(s),
+									<span th:text="${skill.experienceLevel}"></span>
+								</span>
+							</div>
+						</div>
+
+						<!-- Downloads -->
+						<div class="mt-4 pt-2 border-top">
+							<div th:if="${profile.resume != null and !#strings.isEmpty(profile.resume)}" class="mb-2">
+								<div class="text-muted small text-uppercase fw-semibold mb-1"
+									style="letter-spacing:.05em;">Resume</div>
+								<a th:href="@{|/job-seeker-profile/downloadResume?fileName=${profile.resume}&&userID=${profile.userAccountId}|}"
+									class="btn btn-sm btn-outline-primary">
+									<i class="fa-solid fa-file-pdf"></i> Download Resume
+								</a>
+							</div>
+							<div th:if="${coverLetter != null and !#strings.isEmpty(coverLetter)}" class="mb-2 mt-3">
+								<div class="text-muted small text-uppercase fw-semibold mb-1"
+									style="letter-spacing:.05em;">Cover Letter</div>
+								<a th:href="@{|/cover-letter/download?fileName=${coverLetter}&&userID=${profile.userAccountId}|}"
+									class="btn btn-sm btn-outline-primary">
+									<i class="fa-solid fa-file-lines"></i> Download Cover Letter
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 </body>
-<script
-        type="text/javascript"
-        th:src="@{/webjars/jquery/jquery.min.js}"
-></script>
-<script
-        type="text/javascript"
-        th:src="@{/webjars/popper.js/umd/popper.min.js}"
-></script>
-<script
-        type="text/javascript"
-        th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"
-></script>
+<script type="text/javascript" th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+<script type="text/javascript" th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
 <script type="text/javascript" th:src="@{/js/main.js}"></script>
 <script sec:authorize="hasAuthority('Recruiter')">
-    console.log("Disable inputs");
-  $("input").prop( "disabled", true );
-   $("select").prop( "disabled", true );
-       $("button").prop( "disabled", true );
+	console.log("Disable inputs");
+	$("input").prop("disabled", true);
+	$("select").prop("disabled", true);
+	$("button").prop("disabled", true);
 </script>
 <script>
 
 
-    var counter = 0;
-     $(document).on("click", "#addSkill", function (e) {
-       e.preventDefault();
-       counter++;
-        var newRow = jQuery("<div id='skill-repeat'><div class='row'>"+
-                   "    <div class='col-md-4 pr-1'>"+
-                   "     <input"+
-                   "        hidden type='text'"+
-                   "        class='form-control' "+
-                   "        name='skills["+counter+"].Id'"+
-                   "      />"+
-                   "      <input"+
-                   "        placeholder='Skill Name'"+
-                   "        type='text'"+
-                   "        class='form-control'"+
-                   "        name='skills["+counter+"].name'"+
-                   "      />"+
-                   "    </div>"+
-                   "    <div class='col-md-4 px-1'>"+
-                   "      <input"+
-                   "        placeholder='Years of Experience'"+
-                   "        type='text'"+
-                   "        class='form-control'"+
-                   "        name='skills["+counter+"].yearsOfExperience'"+
-                   "      />"+
-                   "    </div>"+
-                   "    <div class='form-group col-md-4 pl-1'>"+
-                   "      <select"+
-                   "        required"+
-                   "        class='form-control'"+
-                   "        name='skills["+counter+"].experienceLevel'"+
-                   "      >"+
-                   "        <option selected>Experience Level</option>"+
-                   "        <option value='Beginner'>Beginner</option>"+
-                   "        <option value='Intermediate'>Intermediate</option>"+
-                   "        <option value='Advance'>Advance</option>"+
-                   "      </select>"+
-                   "    </div>"+
-                   "  </div>"+
-                   "</div>");
-        console.log(newRow);
-       $('#skill-repeat')
-         .parent('div.parent')
-         .append(newRow);
+	var counter = 0;
+	$(document).on("click", "#addSkill", function (e) {
+		e.preventDefault();
+		counter++;
+		var newRow = jQuery("<div id='skill-repeat'><div class='row'>" +
+			"    <div class='col-md-4 pr-1'>" +
+			"     <input" +
+			"        hidden type='text'" +
+			"        class='form-control' " +
+			"        name='skills[" + counter + "].Id'" +
+			"      />" +
+			"      <input" +
+			"        placeholder='Skill Name'" +
+			"        type='text'" +
+			"        class='form-control'" +
+			"        name='skills[" + counter + "].name'" +
+			"      />" +
+			"    </div>" +
+			"    <div class='col-md-4 px-1'>" +
+			"      <input" +
+			"        placeholder='Years of Experience'" +
+			"        type='text'" +
+			"        class='form-control'" +
+			"        name='skills[" + counter + "].yearsOfExperience'" +
+			"      />" +
+			"    </div>" +
+			"    <div class='form-group col-md-4 pl-1'>" +
+			"      <select" +
+			"        required" +
+			"        class='form-control'" +
+			"        name='skills[" + counter + "].experienceLevel'" +
+			"      >" +
+			"        <option selected>Experience Level</option>" +
+			"        <option value='Beginner'>Beginner</option>" +
+			"        <option value='Intermediate'>Intermediate</option>" +
+			"        <option value='Advance'>Advance</option>" +
+			"      </select>" +
+			"    </div>" +
+			"  </div>" +
+			"</div>");
+		console.log(newRow);
+		$('#skill-repeat')
+			.parent('div.parent')
+			.append(newRow);
 
-     });
+	});
 </script>
+
 </html>

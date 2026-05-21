@@ -15,5 +15,5 @@ public record JobDto(
         Boolean isActive
 ) {
     public record LocationDto(Integer id, String city, String state, String country) {}
-    public record CompanyDto(Integer id, String name) {}
+    public record CompanyDto(Integer id, String name, String logo) {}
 }

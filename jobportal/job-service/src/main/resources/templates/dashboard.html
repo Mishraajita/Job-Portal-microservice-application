@@ -293,6 +293,9 @@
                                 >
                             </div>
                             <div class="col-md-4 text-right">
+                                <img th:if="${jobPost.jobCompanyId != null and !#strings.isEmpty(jobPost.jobCompanyId.logo)}"
+                                     th:src="@{/photos/company/{logo}(logo=${jobPost.jobCompanyId.logo})}"
+                                     height="30" class="me-1" alt=""/>
                                 <label th:text="${jobPost.jobCompanyId.name}"
                                 >Recruiter Company Name</label
                                 >

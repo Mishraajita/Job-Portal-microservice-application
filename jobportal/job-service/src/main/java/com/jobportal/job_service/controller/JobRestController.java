@@ -39,7 +39,8 @@ public class JobRestController {
                         : null,
                 job.getJobCompanyId() != null
                         ? new JobDto.CompanyDto(job.getJobCompanyId().getId(),
-                                job.getJobCompanyId().getName())
+                                job.getJobCompanyId().getName(),
+                        		job.getJobCompanyId().getLogo())
                         : null,
                 job.getIsActive()        
         );

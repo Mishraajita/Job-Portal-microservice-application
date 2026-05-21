@@ -23,10 +23,11 @@
         </div>
     </div>
     <div class="col-md-7 container myForm">
-        <form id="job-main-form" th:action="@{/dashboard/addNew}" th:object="${jobPostActivity}" method="post" class="job-add-form">
+        <form id="job-main-form" th:action="@{/dashboard/addNew}" th:object="${jobPostActivity}" method="post" enctype="multipart/form-data" class="job-add-form">
             <input hidden type="text" th:field="*{jobPostId}" >
             <input hidden type="text" th:field="*{jobLocationId.Id}" >
             <input hidden type="text" th:field="*{jobCompanyId.Id}" >
+            <input hidden type="text" th:field="*{jobCompanyId.logo}" >
             <div class="row">
                 <div class="col-lg-12">
                     <div class="d-flex justify-content-center pt-3">
@@ -37,13 +38,13 @@
             <label class="heading_font font_sub_heading_color">Job Details</label>
             <div class="row" >
                 <div class="col-lg-12 form-group">
-                    <input id="title" type="text" th:field="*{jobTitle}" class="form-control" placeholder="Job Title">
+                    <input id="title" type="text" th:field="*{jobTitle}" class="form-control" placeholder="Job Title" required>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-4 form-group">
-                    <select id="type" th:field="*{jobType}" class="form-control">
+                    <select id="type" th:field="*{jobType}" class="form-control" required>
                         <option value="" >Employment Type</option>
                         <option th:value="Full-time" >Full-time</option>
                         <option th:value="Part-time" >Part-time</option>
@@ -52,7 +53,7 @@
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
-                    <select id="remote" th:field="*{remote}" class="form-control">
+                    <select id="remote" th:field="*{remote}" class="form-control" required>
                         <option value="">Select a Remote</option>
                         <option th:value="Remote-Only">Remote-Only</option>
                         <option th:value="Office-Only">Office-Only</option>
@@ -60,7 +61,7 @@
                     </select>
                 </div>
                 <div class="col-md-4 form-group">
-                    <input id="salary" th:field="*{salary}" type="text" class="form-control" placeholder="Salary">
+                    <input id="salary" th:field="*{salary}" type="text" class="form-control" placeholder="Salary" required>
                 </div>
             </div>
             <div class="row">
@@ -68,25 +69,36 @@
                     <label class="mt-2 heading_font font_sub_heading_color">Description</label>
                     <textarea type="text" rows="4" id="content" placeholder="Content" class="form-control"
                               th:field="*{descriptionOfJob}" autocomplete="off"></textarea>
+                    <div id="desc-error" class="text-danger small" style="display:none;">Description is required.</div>
                 </div>
             </div>
 
             <label class="mt-2 heading_font font_sub_heading_color">Location</label>
             <div class="row" >
                 <div class="col-md-4 form-group">
-                    <input th:field="*{jobLocationId.city}" id="city" type="text"  class="form-control" placeholder="City">
+                    <input th:field="*{jobLocationId.city}" id="city" type="text"  class="form-control" placeholder="City" required>
                 </div>
                 <div class="col-md-4 form-group">
-                    <input id="state" th:field="*{jobLocationId.state}" type="text"  class="form-control" placeholder="State">
+                    <input id="state" th:field="*{jobLocationId.state}" type="text"  class="form-control" placeholder="State" required>
                 </div>
                 <div class="col-md-4 form-group">
-                    <input id="country" th:field="*{jobLocationId.country}" type="text"  class="form-control" placeholder="Country">
+                    <input id="country" th:field="*{jobLocationId.country}" type="text"  class="form-control" placeholder="Country" required>
                 </div>
             </div>
             <div class="row">
                 <div class="col-lg-12 form-group">
                     <label class="mt-2 heading_font font_sub_heading_color">Company</label>
-                    <input id="companyName" th:field="*{jobCompanyId.name}" type="text" class="form-control" placeholder="Company Name">
+                    <input id="companyName" th:field="*{jobCompanyId.name}" type="text" class="form-control" placeholder="Company Name" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12 form-group">
+                    <label class="mt-2 heading_font font_sub_heading_color">Company Logo</label>
+					<input type="file" name="companyLogo" class="form-control" accept="image/png, image/jpeg"
+						th:required="${jobPostActivity.jobCompanyId == null or #strings.isEmpty(jobPostActivity.jobCompanyId.logo)}">
+					<small class="text-muted">Accepted formats: PNG, JPEG</small>
+                    <small th:if="${jobPostActivity.jobCompanyId != null and !#strings.isEmpty(jobPostActivity.jobCompanyId.logo)}"
+                           class="text-muted">Current: <span th:text="${jobPostActivity.jobCompanyId.logo}"></span></small>
                 </div>
             </div>
 
@@ -107,9 +119,19 @@
 <script type="text/javascript" th:src="@{/js/main.js}"></script>
 
 <script>
-console.log($('#content'));
     $('#content').summernote({
         height: 100
+    });
+
+    $('#job-main-form').on('submit', function(e) {
+        var desc = $('#content').val();
+        if (!desc || desc.trim() === '' || desc.trim() === '<p><br></p>') {
+            e.preventDefault();
+            $('#desc-error').show();
+            $('#content').closest('.form-group').find('.note-editor').css('border', '1px solid red');
+        } else {
+            $('#desc-error').hide();
+        }
     });
 </script>
 

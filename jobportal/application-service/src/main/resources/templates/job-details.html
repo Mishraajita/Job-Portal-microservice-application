@@ -103,7 +103,12 @@
                 <div class="mt-1">
                     <p th:text="${jobDetails.jobLocationId.city+', '+ jobDetails.jobLocationId.state}"
                        class="m-0"> California, USA</p>
-                    <p th:text="${jobDetails.jobCompanyId.name}">Company</p>
+                    <p>
+                        <img th:if="${jobDetails.jobCompanyId != null and !#strings.isEmpty(jobDetails.jobCompanyId.logo)}"
+                             th:src="@{/photos/company/{logo}(logo=${jobDetails.jobCompanyId.logo})}"
+                             height="40" class="me-2" alt="Company Logo"/>
+                        <span th:text="${jobDetails.jobCompanyId.name}">Company</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -146,10 +151,9 @@
                         <div class="candidatesApplied">
                             <label>Candidates Applied for Job</label>
                             <th:block th:each="applyList:${applyList}">
-                                <a th:href="@{/job-seeker-profile/{id}(id=${applyList.userId.userAccountId})}"
-                                   class="white"
-                                   th:text="${applyList.userId.firstName+', '+applyList.userId.lastName}">FirstName,
-                                    LastName</a>
+								<a th:href="@{/job-seeker-profile/{id}(id=${applyList.userId.userAccountId}, coverLetter=${applyList.coverLetter})}"
+									class="white" th:text="${applyList.userId.firstName+', '+applyList.userId.lastName}">FirstName,
+									LastName</a>
                             </th:block>
                         </div>
                     </div>
@@ -157,18 +161,27 @@
             </div>
 
             <div class="mt-3 px-3" sec:authorize="hasAuthority('Job Seeker')">
-                <div class="row">
-                    <div class="col-md-3">
-                        <form th:action="@{/job-details/apply/{id}(id=${jobDetails.jobPostId})}" th:object="${applyJob}"
-                              method="post">
+                <form th:action="@{/job-details/apply/{id}(id=${jobDetails.jobPostId})}" th:object="${applyJob}"
+                      method="post" enctype="multipart/form-data">
+                    <div class="row" th:if="${alreadyApplied == false}">
+                        <div class="col-md-12 form-group">
+                            <label class="large-label">Cover Letter</label>
+                            <input type="file" name="coverLetterFile" class="form-control" accept=".pdf,.docx" required>
+                            <small class="text-muted">Accepted formats: PDF, DOCX</small>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-3">
                             <button class="btn-sec btn-red w-100" type="submit" th:if="${alreadyApplied == false}">Apply
                                 Now
                             </button>
                             <button class="btn-sec btn-red w-100" disabled th:if="${alreadyApplied == true}">Already
                                 Applied
                             </button>
-                        </form>
+                        </div>
                     </div>
+                </form>
+                <div class="row mt-2">
                     <div class="col-md-3">
                         <form th:action="@{/job-details/save/{id}(id=${jobDetails.jobPostId})}" th:object="${applyJob}"
                               method="post">

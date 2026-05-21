@@ -11,6 +11,7 @@ import com.jobportal.job_service.feign.client.RecruiterServiceClient;
 import com.jobportal.job_service.feign.client.SavedJobsServiceClient;
 import com.jobportal.job_service.feign.client.UserServiceClient;
 import com.jobportal.job_service.services.JobPostActivityService;
+import com.jobportal.job_service.util.FileUploadUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -24,12 +25,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class JobPostActivityController {
@@ -212,7 +216,7 @@ public class JobPostActivityController {
         }
         return "add-jobs";
     }
-    
+
     @PostMapping("/dashboard/deleteJob/{id}")
     public String deleteJob(@PathVariable("id") int id, HttpServletRequest request) {
         jobPostActivityService.deleteById(id);
@@ -220,13 +224,35 @@ public class JobPostActivityController {
     }
 
     @PostMapping("/dashboard/addNew")
-    public String addNew(JobPostActivity jobPostActivity, HttpServletRequest request) {
+    public String addNew(JobPostActivity jobPostActivity,
+                         @RequestParam(value = "companyLogo", required = false) MultipartFile companyLogo,
+                         RedirectAttributes redirectAttributes,
+                         HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (!(auth instanceof AnonymousAuthenticationToken)) {
             UserDto userDto = userServiceClient.getUserByEmail(auth.getName());
             if (userDto != null) jobPostActivity.setPostedById(userDto.userId());
         }
         jobPostActivity.setPostedDate(new Date());
+        if (companyLogo != null && !companyLogo.isEmpty() && jobPostActivity.getJobCompanyId() != null) {
+        	String ct = companyLogo.getContentType();
+        	String fname = companyLogo.getOriginalFilename() != null ? companyLogo.getOriginalFilename().toLowerCase() : "";
+            boolean validType = (ct != null && (ct.equalsIgnoreCase("image/jpeg") || ct.equalsIgnoreCase("image/png")))
+                    || fname.endsWith(".jpg") || fname.endsWith(".jpeg") || fname.endsWith(".png");
+            if (!validType) {
+                redirectAttributes.addFlashAttribute("error", "Company logo must be a PNG or JPEG image.");
+                return buildGatewayRedirectUrl(request, "dashboard/add");
+            }
+
+            try {
+                String fileName = org.springframework.util.StringUtils.cleanPath(
+                        java.util.Objects.requireNonNull(companyLogo.getOriginalFilename()));
+                FileUploadUtil.saveFile("photos/company", fileName, companyLogo);
+                jobPostActivity.getJobCompanyId().setLogo(fileName);
+            } catch (IOException e) {
+                // logo upload failed; job saved without logo
+            }
+        }
         jobPostActivityService.addNew(jobPostActivity);
         return buildGatewayRedirectUrl(request, "dashboard/");
     }

@@ -1,2 +1,9 @@
 /.metadata/
+.idea/
+
+# Compiled output (each service has its own .gitignore with target/, but adding here as safety)
+**/target/
+
+# Runtime file upload directories — never commit user-uploaded files
 photos/
+covers/

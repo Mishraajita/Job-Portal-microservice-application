@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/job-seeker-profile")
@@ -73,6 +74,7 @@ public class JobSeekerProfileController {
                          @RequestParam(value = "image", required = false) MultipartFile image,
                          @RequestParam(value = "pdf", required = false) MultipartFile pdf,
                          Model model,
+                         RedirectAttributes redirectAttributes,
                          HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof AnonymousAuthenticationToken)) {
@@ -81,6 +83,32 @@ public class JobSeekerProfileController {
                 jobSeekerProfile.setUserAccountId(userDto.userId());
             }
         }
+        
+        // Validate profile photo type
+        if (image != null && !image.isEmpty()) {
+            String ct = image.getContentType();
+            String fname = image.getOriginalFilename() != null ? image.getOriginalFilename().toLowerCase() : "";
+            boolean validType = (ct != null && (ct.equalsIgnoreCase("image/jpeg") || ct.equalsIgnoreCase("image/png")))
+                    || fname.endsWith(".jpg") || fname.endsWith(".jpeg") || fname.endsWith(".png");
+            if (!validType) {
+                redirectAttributes.addFlashAttribute("error", "Profile photo must be a JPEG or PNG image.");
+                return buildGatewayRedirectUrl(request, "job-seeker-profile/");
+            }
+        }
+        
+        // Validate resume type
+        if (pdf != null && !pdf.isEmpty()) {
+            String ct = pdf.getContentType();
+            String fname = pdf.getOriginalFilename() != null ? pdf.getOriginalFilename().toLowerCase() : "";
+            boolean validType = (ct != null && (ct.equalsIgnoreCase("application/pdf")
+                    || ct.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")))
+                    || fname.endsWith(".pdf") || fname.endsWith(".docx");
+            if (!validType) {
+                redirectAttributes.addFlashAttribute("error", "Resume must be a PDF or DOCX file.");
+                return buildGatewayRedirectUrl(request, "job-seeker-profile/");
+            }
+        }
+
 
         model.addAttribute("profile", jobSeekerProfile);
         model.addAttribute("skills", new ArrayList<>());
@@ -117,11 +145,17 @@ public class JobSeekerProfileController {
     }
 
     @GetMapping("/{id}")
-    public String candidateProfile(@PathVariable("id") int id, Model model) {
+    public String candidateProfile(@PathVariable("id") int id,
+                                   @RequestParam(value = "coverLetter", required = false) String coverLetter,
+                                   Model model) {
         Optional<JobSeekerProfile> seekerProfile = jobSeekerProfileService.getOne(id);
         seekerProfile.ifPresent(p -> model.addAttribute("profile", p));
+        if (coverLetter != null && !coverLetter.isEmpty()) {
+            model.addAttribute("coverLetter", coverLetter);
+        }
         return "job-seeker-profile";
     }
+
 
     @GetMapping("/downloadResume")
     public ResponseEntity<?> downloadResume(@RequestParam(value = "fileName") String fileName,

@@ -68,10 +68,12 @@ public class RecruiterProfileController {
         // Server-side image validation
         if (multipartFile != null && !multipartFile.isEmpty()) {
             String contentType = multipartFile.getContentType();
+            String fname = multipartFile.getOriginalFilename() != null ? multipartFile.getOriginalFilename().toLowerCase() : "";
+            boolean validType = (contentType != null && (contentType.equalsIgnoreCase("image/jpeg")
+                    || contentType.equalsIgnoreCase("image/png")))
+                    || fname.endsWith(".jpg") || fname.endsWith(".jpeg") || fname.endsWith(".png");
             long sizeBytes = multipartFile.getSize();
-            if (contentType == null
-                    || (!contentType.equalsIgnoreCase("image/jpeg")
-                        && !contentType.equalsIgnoreCase("image/png"))) {
+            if (!validType) {
                 redirectAttributes.addFlashAttribute("error",
                         "Invalid file type. Only JPEG and PNG images are allowed.");
                 return "redirect:/recruiter-profile/";
